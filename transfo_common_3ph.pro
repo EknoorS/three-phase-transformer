@@ -1,7 +1,7 @@
 // --- Dimensions (from transfo_common.pro) ---
 width_Core = 3.2;
 height_Core = 1.;
-thickness_Core = 0.3;
+thickness_Core = 0.1;
 width_Window = 0.5;
 height_Window = 0.5;
 width_Core_Leg = (width_Core-width_Window)/2.; // (0.25)
@@ -18,8 +18,6 @@ gap_LV_HV_2 = 0.005;
 
 gap_Core_Box_X = 1.;
 gap_Core_Box_Y = 1.;
-
-//-solve -pos Analysis -pos Circuit_OCSC
 
 // --- Characteristic lenghts (from transfo_common.pro) ---
 s = 1;

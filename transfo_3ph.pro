@@ -23,9 +23,6 @@ DefineConstant[
   S_nom = {200e3, Name "Design/Nominal Power [VA]"},
   V_HV_nom = {2400, Name "Design/HV Voltage [V]"},
   V_LV_nom = {240,  Name "Design/LV Voltage [V]"},
-  V_OC_ratio = {1, Name "Design/Test Voltage Scale (OC)", Min 0, Max 1},
-  V_SC_ratio = {0.1, Name "Design/Test Voltage Scale (SC)", Min 0, Max 1},
-  R_series_HV = {0.5, Name "Design/HV Series Resistance [Ohm]", Min 1e-3, Max 10},
   
   // --- 4. GEOMETRY ---
   width_Coil_1 = {0.10, Name "Design/Coil Width [m]"},
@@ -47,13 +44,7 @@ Function {
   Z_base = V_LV_nom / I_LV_nom;
   val_Load = (TestMode == 0) ? Z_base : ((TestMode == 1) ? 1e9 : 1e-6); 
   mu0 = 4 * Pi * 10^-7;
-  V_src = V_HV_nom;
-  If(TestMode == 1)
-    V_src = V_HV_nom * V_OC_ratio;
-  ElseIf(TestMode == 2)
-    V_src = V_HV_nom * V_SC_ratio;
-  EndIf
-
+  
   // Material Properties
   mu[Region[{1001, 1011}]] = mu0; // Air
   mu[Region[{1050}]] = mur_Core * mu0; // Core
@@ -155,7 +146,7 @@ Function {
   Resistance[Region[{R_out_1, R_out_2, R_out_3}]] = val_R; 
   Inductance[Region[{R_out_1, R_out_2, R_out_3}]] = val_L;
   Capacitance[Region[{R_out_1, R_out_2, R_out_3}]] = val_C;
-  Resistance[Region[{R_in_1, R_in_2, R_in_3}]] = R_series_HV; // Stabilize circuit with realistic winding resistance
+  Resistance[Region[{R_in_1, R_in_2, R_in_3}]] = 1e-3; 
   phase_1 = 0; phase_2 = -120 * deg; phase_3 = 120 * deg;
 }
 
@@ -167,9 +158,9 @@ Constraint {
   
   { Name Voltage_Cir;
     Case {
-      { Region E_in_1; Value V_src; TimeFunction F_Cos_wt_p[]{2*Pi*Freq, phase_1}; }
-      { Region E_in_2; Value V_src; TimeFunction F_Cos_wt_p[]{2*Pi*Freq, phase_2}; }
-      { Region E_in_3; Value V_src; TimeFunction F_Cos_wt_p[]{2*Pi*Freq, phase_3}; }
+      { Region E_in_1; Value V_HV_nom; TimeFunction F_Cos_wt_p[]{2*Pi*Freq, phase_1}; }
+      { Region E_in_2; Value V_HV_nom; TimeFunction F_Cos_wt_p[]{2*Pi*Freq, phase_2}; }
+      { Region E_in_3; Value V_HV_nom; TimeFunction F_Cos_wt_p[]{2*Pi*Freq, phase_3}; }
     }
   }
   { Name ElectricalCircuit; Type Network;
@@ -219,39 +210,23 @@ PostProcessing {
 }
 
 PostOperation {
-  { Name dyn; NameOfPostProcessing Magnetodynamics2D_av;
+  { Name Analysis; NameOfPostProcessing Design_Results;
     Operation {
-      Print[ j, OnElementsOf Region[{Vol_C_Mag, Vol_S_Mag}], Format Gmsh, File "j.pos" ];
-      Print[ b, OnElementsOf Vol_Mag, Format Gmsh, File "b.pos" ];
-      Print[ az, OnElementsOf Vol_Mag, Format Gmsh, File "az.pos" ];
+      // --- 1. CORE SATURATION CHECK (Required: < 1.8 T) ---
+      Print[ B_Magnitude, OnElementsOf Vol_Mag, Format Gmsh, File "CHECK_SATURATION_B_Mag.pos" ];
+
+      // --- 2. CURRENT VISUALIZATION ---
+      Print[ J_Physics_SkinEffect, OnElementsOf Coils, Format Gmsh, File "J_Physics_SkinEffect.pos" ];
+      Print[ J_Geometry_Source,    OnElementsOf Coils, Format Gmsh, File "J_Geometry_Source.pos" ];
       
-      If (Flag_FrequencyDomain)
-        Echo[ "Results UI", Format Table, File "UI.txt" ];
-        
-        // Phase 1
-        Echo[ "Phase 1 Primary (E_in_1)", Format Table, File > "UI.txt" ];
-        Print[ U, OnRegion E_in_1, Format FrequencyTable, File > "UI.txt" ];
-        Print[ I, OnRegion E_in_1, Format FrequencyTable, File > "UI.txt"];
-        Echo[ "Phase 1 Secondary (R_out_1)", Format Table, File > "UI.txt" ];
-        Print[ U, OnRegion R_out_1, Format FrequencyTable, File > "UI.txt" ];
-        Print[ I, OnRegion R_out_1, Format FrequencyTable, File > "UI.txt"];
-
-        // Phase 2
-        Echo[ "Phase 2 Primary (E_in_2)", Format Table, File > "UI.txt" ];
-        Print[ U, OnRegion E_in_2, Format FrequencyTable, File > "UI.txt" ];
-        Print[ I, OnRegion E_in_2, Format FrequencyTable, File > "UI.txt"];
-        Echo[ "Phase 2 Secondary (R_out_2)", Format Table, File > "UI.txt" ];
-        Print[ U, OnRegion R_out_2, Format FrequencyTable, File > "UI.txt" ];
-        Print[ I, OnRegion R_out_2, Format FrequencyTable, File > "UI.txt"];
-
-        // Phase 3
-        Echo[ "Phase 3 Primary (E_in_3)", Format Table, File > "UI.txt" ];
-        Print[ U, OnRegion E_in_3, Format FrequencyTable, File > "UI.txt" ];
-        Print[ I, OnRegion E_in_3, Format FrequencyTable, File > "UI.txt"];
-        Echo[ "Phase 3 Secondary (R_out_3)", Format Table, File > "UI.txt" ];
-        Print[ U, OnRegion R_out_3, Format FrequencyTable, File > "UI.txt" ];
-        Print[ I, OnRegion R_out_3, Format FrequencyTable, File > "UI.txt"];
-      EndIf
+      // --- 3. STANDARD MAPS ---
+      Print[ Az_field, OnElementsOf Vol_Mag, Format Gmsh, File "Az_field.pos" ];
+      Print[ B_field,  OnElementsOf Vol_Mag, Format Gmsh, File "B_field.pos" ];
+      
+      // --- 4. LOSS DATA ---
+      Print[ Core_Loss_Watts,    OnElementsOf Core,  Format Table, File "Loss_Core.txt" ];
+      Print[ Joule_Loss_Massive, OnElementsOf Coils, Format Table, File "Loss_Joule_Massive.txt" ]; 
+      Print[ Energy_Mag,         OnElementsOf Vol_Mag, Format Table, File "Energy_Magnetic.txt" ];
     }
   }
 }
