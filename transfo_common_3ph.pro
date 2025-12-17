@@ -1,20 +1,20 @@
 // --- Dimensions (from transfo_common.pro) ---
-width_Core = 3.2;
-height_Core = 1.;
+width_Core = 2.5;
+height_Core = 2.3;
 thickness_Core = 0.1;
-width_Window = 0.5;
-height_Window = 0.5;
+width_Window = 0.7;
+height_Window = 1.3;
 width_Core_Leg = (width_Core-width_Window)/2.; // (0.25)
 
-width_Coil_1 = 0.10;
-height_Coil_1 = 0.25;
+width_Coil_1 = 0.20;
+height_Coil_1 = 1.;
 gap_Core_Coil_1 = 0.005; // Gap between Core and LV
 gap_LV_HV_1 = 0.005;     // Gap between LV and HV
 
-width_Coil_2 = 0.10;
-height_Coil_2 = 0.25;
-gap_Core_Coil_2 = 0.005;
-gap_LV_HV_2 = 0.005;
+width_Coil_2 = width_Coil_1;
+height_Coil_2 = height_Coil_1;
+gap_Core_Coil_2 = gap_Core_Coil_1;
+gap_LV_HV_2 = gap_LV_HV_1;
 
 gap_Core_Box_X = 1.;
 gap_Core_Box_Y = 1.;
