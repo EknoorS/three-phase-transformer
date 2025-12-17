@@ -210,23 +210,39 @@ PostProcessing {
 }
 
 PostOperation {
-  { Name Analysis; NameOfPostProcessing Design_Results;
+  { Name dyn; NameOfPostProcessing Magnetodynamics2D_av;
     Operation {
-      // --- 1. CORE SATURATION CHECK (Required: < 1.8 T) ---
-      Print[ B_Magnitude, OnElementsOf Vol_Mag, Format Gmsh, File "CHECK_SATURATION_B_Mag.pos" ];
+      Print[ j, OnElementsOf Region[{Vol_C_Mag, Vol_S_Mag}], Format Gmsh, File "j.pos" ];
+      Print[ b, OnElementsOf Vol_Mag, Format Gmsh, File "b.pos" ];
+      Print[ az, OnElementsOf Vol_Mag, Format Gmsh, File "az.pos" ];
+      
+      If (Flag_FrequencyDomain)
+        Echo[ "Results UI", Format Table, File "UI.txt" ];
+        
+        // Phase 1
+        Echo[ "Phase 1 Primary (E_in_1)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion E_in_1, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion E_in_1, Format FrequencyTable, File > "UI.txt"];
+        Echo[ "Phase 1 Secondary (R_out_1)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion R_out_1, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion R_out_1, Format FrequencyTable, File > "UI.txt"];
 
-      // --- 2. CURRENT VISUALIZATION ---
-      Print[ J_Physics_SkinEffect, OnElementsOf Coils, Format Gmsh, File "J_Physics_SkinEffect.pos" ];
-      Print[ J_Geometry_Source,    OnElementsOf Coils, Format Gmsh, File "J_Geometry_Source.pos" ];
-      
-      // --- 3. STANDARD MAPS ---
-      Print[ Az_field, OnElementsOf Vol_Mag, Format Gmsh, File "Az_field.pos" ];
-      Print[ B_field,  OnElementsOf Vol_Mag, Format Gmsh, File "B_field.pos" ];
-      
-      // --- 4. LOSS DATA ---
-      Print[ Core_Loss_Watts,    OnElementsOf Core,  Format Table, File "Loss_Core.txt" ];
-      Print[ Joule_Loss_Massive, OnElementsOf Coils, Format Table, File "Loss_Joule_Massive.txt" ]; 
-      Print[ Energy_Mag,         OnElementsOf Vol_Mag, Format Table, File "Energy_Magnetic.txt" ];
+        // Phase 2
+        Echo[ "Phase 2 Primary (E_in_2)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion E_in_2, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion E_in_2, Format FrequencyTable, File > "UI.txt"];
+        Echo[ "Phase 2 Secondary (R_out_2)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion R_out_2, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion R_out_2, Format FrequencyTable, File > "UI.txt"];
+
+        // Phase 3
+        Echo[ "Phase 3 Primary (E_in_3)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion E_in_3, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion E_in_3, Format FrequencyTable, File > "UI.txt"];
+        Echo[ "Phase 3 Secondary (R_out_3)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion R_out_3, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion R_out_3, Format FrequencyTable, File > "UI.txt"];
+      EndIf
     }
   }
 }
