@@ -218,22 +218,40 @@ PostProcessing {
   }
 }
 
-
 PostOperation {
-  { Name Analysis; NameOfPostProcessing Design_Results;
+  { Name dyn; NameOfPostProcessing Magnetodynamics2D_av;
     Operation {
-      Print[ B_Magnitude, OnElementsOf Vol_Mag, Format Gmsh, File "CHECK_SATURATION_B_Mag.pos" ];
-      Print[ Core_Loss_Watts, OnElementsOf Core, Format Table, File "Loss_Core.txt" ];
-      Print[ Joule_Loss_Massive, OnElementsOf Coils, Format Table, File "Loss_Joule_Massive.txt" ];
-      Print[ Energy_Mag, OnElementsOf Vol_Mag, Format Table, File "Energy_Magnetic.txt" ];
-    }
-  }
+      Print[ j, OnElementsOf Region[{Vol_C_Mag, Vol_S_Mag}], Format Gmsh, File "j.pos" ];
+      Print[ b, OnElementsOf Vol_Mag, Format Gmsh, File "b.pos" ];
+      Print[ az, OnElementsOf Vol_Mag, Format Gmsh, File "az.pos" ];
+      
+      If (Flag_FrequencyDomain)
+        Echo[ "Results UI", Format Table, File "UI.txt" ];
+        
+        // Phase 1
+        Echo[ "Phase 1 Primary (E_in_1)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion E_in_1, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion E_in_1, Format FrequencyTable, File > "UI.txt"];
+        Echo[ "Phase 1 Secondary (R_out_1)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion R_out_1, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion R_out_1, Format FrequencyTable, File > "UI.txt"];
 
-  { Name Circuit_OCSC; NameOfPostProcessing Magnetodynamics2D_av;
-    Operation {
-      Print[ U, OnRegion SourceV_Cir, Format Table, File "Circuit_U_Source.txt" ];
-      Print[ I, OnRegion SourceV_Cir, Format Table, File "Circuit_I_Source.txt" ];
+        // Phase 2
+        Echo[ "Phase 2 Primary (E_in_2)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion E_in_2, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion E_in_2, Format FrequencyTable, File > "UI.txt"];
+        Echo[ "Phase 2 Secondary (R_out_2)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion R_out_2, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion R_out_2, Format FrequencyTable, File > "UI.txt"];
+
+        // Phase 3
+        Echo[ "Phase 3 Primary (E_in_3)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion E_in_3, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion E_in_3, Format FrequencyTable, File > "UI.txt"];
+        Echo[ "Phase 3 Secondary (R_out_3)", Format Table, File > "UI.txt" ];
+        Print[ U, OnRegion R_out_3, Format FrequencyTable, File > "UI.txt" ];
+        Print[ I, OnRegion R_out_3, Format FrequencyTable, File > "UI.txt"];
+      EndIf
     }
   }
 }
- // -solve -pos Analysis -pos Circuit_OCSC
